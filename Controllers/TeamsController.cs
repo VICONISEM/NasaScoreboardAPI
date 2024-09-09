@@ -19,14 +19,14 @@ namespace ScoreboardAPI.Controllers
             _context = context;
         }
 
-        // Get all teams
+       
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Team>>> GetTeams()
         {
             return await _context.Teams.ToListAsync();
         }
 
-        // Get a team by ID
+        
         [HttpGet("{id}")]
         public async Task<ActionResult<Team>> GetTeam(int id)
         {
@@ -38,13 +38,13 @@ namespace ScoreboardAPI.Controllers
             return Ok(team);
         }
 
-        // Add a new team
+        
         [HttpPost]
         public async Task<ActionResult<Team>> AddTeam(Team newTeam)
         {
             if (newTeam == null || _context.Teams.Any(t => t.Id == newTeam.Id))
             {
-                return BadRequest("Invalid team data or duplicate ID.");
+                return BadRequest("Invalid team data");
             }
 
             _context.Teams.Add(newTeam);
@@ -52,7 +52,7 @@ namespace ScoreboardAPI.Controllers
             return CreatedAtAction(nameof(GetTeam), new { id = newTeam.Id }, newTeam);
         }
 
-        // Update a team's score
+        
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdateTeamScore(int id, Team updatedTeam)
         {
@@ -67,7 +67,7 @@ namespace ScoreboardAPI.Controllers
             return NoContent();
         }
 
-        // Delete a team by ID
+      
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteTeam(int id)
         {
