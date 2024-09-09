@@ -6,9 +6,20 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Add Swagger/OpenAPI services
+// Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.AllowAnyOrigin()    // Allow any domain
+               .AllowAnyMethod()    // Allow any HTTP method
+               .AllowAnyHeader();   // Allow any header
+    });
+});
 
 // Configure the database context with SQL Server
 builder.Services.AddDbContext<ScoreboardContext>(options =>
@@ -16,13 +27,20 @@ builder.Services.AddDbContext<ScoreboardContext>(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+// Use CORS
+app.UseCors();
+
+if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Environment.IsProduction())
 {
     app.UseDeveloperExceptionPage();
-    // Enable Swagger in Development mode
+
+    // Enable Swagger in all environments
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Scoreboard API v1");
+        c.RoutePrefix = string.Empty; // Serve Swagger at the root URL
+    });
 }
 
 app.UseHttpsRedirection();
