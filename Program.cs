@@ -29,7 +29,7 @@ var app = builder.Build();
 
 app.UseCors();
 
-if (app.Environment.IsDevelopment() || app.Environment.IsStaging() ||  app.Environment.IsProduction())
+if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Environment.IsProduction())
 {
     app.UseDeveloperExceptionPage();
 
