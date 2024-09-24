@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ScoreboardAPI.Models;
 using ScoreboardAPI.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 
 namespace ScoreboardAPI.Controllers
 {
@@ -13,20 +14,21 @@ namespace ScoreboardAPI.Controllers
     public class TeamsController : ControllerBase
     {
         private readonly ScoreboardContext _context;
+        private readonly IHubContext<ScoreboardHub> _hubContext;
 
-        public TeamsController(ScoreboardContext context)
+        public TeamsController(ScoreboardContext context, IHubContext<ScoreboardHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
-        // Get all teams
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Team>>> GetTeams()
         {
             return await _context.Teams.ToListAsync();
         }
 
-        // Get a team by ID
+      
         [HttpGet("{id}")]
         public async Task<ActionResult<Team>> GetTeam(int id)
         {
@@ -38,7 +40,7 @@ namespace ScoreboardAPI.Controllers
             return Ok(team);
         }
 
-        // Add a new team
+       
         [HttpPost]
         public async Task<ActionResult<Team>> AddTeam(Team newTeam)
         {
@@ -49,10 +51,13 @@ namespace ScoreboardAPI.Controllers
 
             _context.Teams.Add(newTeam);
             await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.All.SendAsync("ReceiveScoreUpdate", newTeam);
+
             return CreatedAtAction(nameof(GetTeam), new { id = newTeam.Id }, newTeam);
         }
 
-        // Update a team's score
+       
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdateTeamScore(int id, Team updatedTeam)
         {
@@ -64,10 +69,14 @@ namespace ScoreboardAPI.Controllers
 
             team.Score = updatedTeam.Score;
             await _context.SaveChangesAsync();
+
+            
+            await _hubContext.Clients.All.SendAsync("ReceiveScoreUpdate", team);
+
             return NoContent();
         }
 
-        // Delete a team by ID
+        
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteTeam(int id)
         {
@@ -79,6 +88,10 @@ namespace ScoreboardAPI.Controllers
 
             _context.Teams.Remove(team);
             await _context.SaveChangesAsync();
+
+            
+            await _hubContext.Clients.All.SendAsync("ReceiveTeamDeletion", id);
+
             return NoContent();
         }
     }
