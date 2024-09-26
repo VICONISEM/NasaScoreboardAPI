@@ -21,6 +21,9 @@ namespace ScoreboardAPI.Data
 
             modelBuilder.Entity<Team>().Property(t=>t.Name)
                 .IsRequired();
+            modelBuilder.Entity<Team>().Ignore(t => t.PhotoBase64);
+            modelBuilder.Entity<Team>().Property(t => t.PhotoPath).IsRequired(false);
+
 
             base.OnModelCreating(modelBuilder);
         }

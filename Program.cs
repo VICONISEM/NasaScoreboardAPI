@@ -12,6 +12,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
@@ -41,6 +42,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Enviro
         c.RoutePrefix = string.Empty; 
     });
 }
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

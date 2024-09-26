@@ -9,6 +9,10 @@
 
         public int Score { get; set; }
 
+        public string ?PhotoPath { get; set; }
+
+        public string ?PhotoBase64 { get; set; }
+
 
     }
 }
