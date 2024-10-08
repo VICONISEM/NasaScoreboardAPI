@@ -1,32 +1,50 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ScoreboardAPI.Models;
 using ScoreboardAPI.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+using ScoreboardAPI.Handler;
 
 namespace ScoreboardAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class TeamsController : ControllerBase
     {
         private readonly ScoreboardContext _context;
+        private readonly IHubContext<ScoreboardHub> _hubContext;
+      
 
-        public TeamsController(ScoreboardContext context)
+        public TeamsController(ScoreboardContext context, IHubContext<ScoreboardHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
+           
         }
 
-       
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Team>>> GetTeams()
         {
-            return await _context.Teams.ToListAsync();
+            var teams = await _context.Teams.ToListAsync();
+
+            foreach (var team in teams)
+            {
+                if (!string.IsNullOrEmpty(team.PhotoPath))
+                {
+                   
+                    TeamOperations.UrlPhoto(Request, team);
+
+                }
+            }
+
+            return Ok(teams);
         }
 
-        
+
         [HttpGet("{id}")]
         public async Task<ActionResult<Team>> GetTeam(int id)
         {
@@ -35,24 +53,44 @@ namespace ScoreboardAPI.Controllers
             {
                 return NotFound();
             }
+
+           
+            if (!string.IsNullOrEmpty(team.PhotoPath))
+            {
+                TeamOperations.UrlPhoto(Request, team);
+            }
+
             return Ok(team);
         }
 
-        
+
         [HttpPost]
-        public async Task<ActionResult<Team>> AddTeam(Team newTeam)
+        public async Task<ActionResult<Team>> AddTeam([FromForm] Team newTeam, IFormFile photo)
         {
             if (newTeam == null || _context.Teams.Any(t => t.Id == newTeam.Id))
             {
                 return BadRequest("Invalid team data");
             }
 
-            _context.Teams.Add(newTeam);
-            await _context.SaveChangesAsync();
+          
+            if (photo != null && photo.Length > 0)
+            {
+
+                
+
+                TeamOperations.FileHandlerAddPhoto(newTeam, photo);
+
+                
+           
+            }
+                 TeamOperations.Sum(newTeam);
+                _context.Teams.Add(newTeam);
+                await _context.SaveChangesAsync();
+
             return CreatedAtAction(nameof(GetTeam), new { id = newTeam.Id }, newTeam);
         }
 
-        
+
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdateTeamScore(int id, Team updatedTeam)
         {
@@ -62,12 +100,19 @@ namespace ScoreboardAPI.Controllers
                 return NotFound();
             }
 
-            team.Score = updatedTeam.Score;
+
+             TeamOperations.Clone(team, updatedTeam);
+           
+   
             await _context.SaveChangesAsync();
+
+            
+            await _hubContext.Clients.All.SendAsync("ReceiveScoreUpdate", team);
+
             return NoContent();
         }
 
-      
+
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteTeam(int id)
         {
@@ -76,9 +121,17 @@ namespace ScoreboardAPI.Controllers
             {
                 return NotFound();
             }
-
+            if (!string.IsNullOrEmpty(team.PhotoPath))
+            {
+              
+                TeamOperations.FileHandlerDeletePhoto(team);
+            }
             _context.Teams.Remove(team);
             await _context.SaveChangesAsync();
+
+            
+            await _hubContext.Clients.All.SendAsync("ReceiveTeamDeletion", id);
+
             return NoContent();
         }
     }

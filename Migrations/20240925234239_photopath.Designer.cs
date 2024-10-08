@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreboardAPI.Data;
 
@@ -10,9 +11,11 @@ using ScoreboardAPI.Data;
 namespace ScoreboardAPI.Migrations
 {
     [DbContext(typeof(ScoreboardContext))]
-    partial class ScoreboardContextModelSnapshot : ModelSnapshot
+    [Migration("20240925234239_photopath")]
+    partial class photopath
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,34 +32,20 @@ namespace ScoreboardAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("Creativity")
-                        .HasColumnType("float");
-
-                    b.Property<double>("Impact")
-                        .HasColumnType("float");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhotoPath")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("Presentation")
-                        .HasColumnType("float");
-
-                    b.Property<double>("Relevance")
-                        .HasColumnType("float");
-
-                    b.Property<double>("TotalScore")
-                        .HasColumnType("float");
-
-                    b.Property<double>("Validity")
-                        .HasColumnType("float");
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Teams", (string)null);
+                    b.ToTable("Teams");
                 });
 #pragma warning restore 612, 618
         }
