@@ -6,20 +6,23 @@ using Microsoft.AspNetCore.SignalR;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ScoreboardAPI.Handler;
 
 namespace ScoreboardAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class TeamsController : ControllerBase
     {
         private readonly ScoreboardContext _context;
         private readonly IHubContext<ScoreboardHub> _hubContext;
+      
 
         public TeamsController(ScoreboardContext context, IHubContext<ScoreboardHub> hubContext)
         {
             _context = context;
             _hubContext = hubContext;
+           
         }
 
         
@@ -33,14 +36,8 @@ namespace ScoreboardAPI.Controllers
                 if (!string.IsNullOrEmpty(team.PhotoPath))
                 {
                    
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", team.PhotoPath.TrimStart('/'));
+                    TeamOperations.UrlPhoto(Request, team);
 
-                    
-                    if (System.IO.File.Exists(filePath))
-                    {
-                        var imageBytes = await System.IO.File.ReadAllBytesAsync(filePath);
-                        team.PhotoBase64 = Convert.ToBase64String(imageBytes);
-                    }
                 }
             }
 
@@ -60,13 +57,7 @@ namespace ScoreboardAPI.Controllers
            
             if (!string.IsNullOrEmpty(team.PhotoPath))
             {
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", team.PhotoPath.TrimStart('/'));
-
-                if (System.IO.File.Exists(filePath))
-                {
-                    var imageBytes = await System.IO.File.ReadAllBytesAsync(filePath);
-                    team.PhotoBase64 = Convert.ToBase64String(imageBytes);
-                }
+                TeamOperations.UrlPhoto(Request, team);
             }
 
             return Ok(team);
@@ -85,24 +76,17 @@ namespace ScoreboardAPI.Controllers
           
             if (photo != null && photo.Length > 0)
             {
-               
-                var fileName = $"{newTeam.Name}_{Guid.NewGuid()}{Path.GetExtension(photo.FileName)}";
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await photo.CopyToAsync(stream);
-                }
-
-                newTeam.PhotoPath = $"/Images/{fileName}";
 
                 
-                var imageBytes = await System.IO.File.ReadAllBytesAsync(filePath);
-                newTeam.PhotoBase64 = Convert.ToBase64String(imageBytes);
-            }
 
-            _context.Teams.Add(newTeam);
-            await _context.SaveChangesAsync();
+                TeamOperations.FileHandlerAddPhoto(newTeam, photo);
+
+                
+           
+            }
+                 TeamOperations.Sum(newTeam);
+                _context.Teams.Add(newTeam);
+                await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetTeam), new { id = newTeam.Id }, newTeam);
         }
@@ -117,7 +101,10 @@ namespace ScoreboardAPI.Controllers
                 return NotFound();
             }
 
-            team.Score = updatedTeam.Score;
+
+             TeamOperations.Clone(team, updatedTeam);
+           
+   
             await _context.SaveChangesAsync();
 
             
@@ -135,7 +122,11 @@ namespace ScoreboardAPI.Controllers
             {
                 return NotFound();
             }
-
+            if (!string.IsNullOrEmpty(team.PhotoPath))
+            {
+              
+                TeamOperations.FileHandlerDeletePhoto(team);
+            }
             _context.Teams.Remove(team);
             await _context.SaveChangesAsync();
 

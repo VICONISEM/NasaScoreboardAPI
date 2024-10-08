@@ -16,12 +16,15 @@ namespace ScoreboardAPI.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Team>().HasKey(t => t.Id);
+
             modelBuilder.Entity<Team>().Property(t=>t.Id)
                                     .UseIdentityColumn(1,1);
 
             modelBuilder.Entity<Team>().Property(t=>t.Name)
                 .IsRequired();
-            modelBuilder.Entity<Team>().Ignore(t => t.PhotoBase64);
+           
+            modelBuilder.Entity<Team>().Ignore(t => t.PhotoUrl);
+
             modelBuilder.Entity<Team>().Property(t => t.PhotoPath).IsRequired(false);
 
 
