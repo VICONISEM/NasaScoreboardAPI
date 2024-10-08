@@ -25,7 +25,7 @@ namespace ScoreboardAPI.Controllers
            
         }
 
-        
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Team>>> GetTeams()
         {
@@ -62,7 +62,6 @@ namespace ScoreboardAPI.Controllers
 
             return Ok(team);
         }
-
 
 
         [HttpPost]
@@ -113,7 +112,7 @@ namespace ScoreboardAPI.Controllers
             return NoContent();
         }
 
-        
+
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteTeam(int id)
         {

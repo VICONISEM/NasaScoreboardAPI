@@ -7,13 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR(); 
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-
-
-
-
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
@@ -24,11 +20,13 @@ builder.Services.AddCors(options =>
     });
 });
 
+
 builder.Services.AddDbContext<ScoreboardContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 //builder.Services.AddScoped<ITeamOperation, TeamOperations>();
 
 var app = builder.Build();
+
 
 app.UseCors();
 
